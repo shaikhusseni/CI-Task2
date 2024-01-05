@@ -38,18 +38,22 @@ public class EmployeeController {
         EmployeeDto savedEmployee = employeeService.saveEmployee(employee);
         return new ResponseEntity<>(savedEmployee, HttpStatus.CREATED);
     }
+
+
     //To get singel Employee Data based on employee Id  from data base this mapping we do
 
     @GetMapping("/getby/{empId}")
-    public EmployeeDto getById(@PathVariable("empId") Long empId) {
+    public EmployeeDto getById(@PathVariable("empId") Long empId) throws InspireNetException {
         return employeeService.getById(empId);
     }
 
+
     //    To delete particular Employee Data Based on Id
     @DeleteMapping("/deleteby/{empId}")
-    public void deleteEmployeeById(@PathVariable("empId") Long empId) {
+    public void deleteEmployeeById(@PathVariable("empId") Long empId) throws InspireNetException {
         employeeService.deleteById(empId);
     }
+
 
 
     //    To update the Employee particular Employee based on his Id
@@ -59,40 +63,8 @@ public class EmployeeController {
     }
 
 
-    //    @GetMapping("/getAll")
-//    public List<EmployeeDto> getEmployees() {
-//
-//        List<EmployeeDto> employees = employeeService.getEmployees();
-//        return employees;
-//    }
-//
-//
-
-    //    @PostMapping("/save")
-//    public Employee saveEmployee(@RequestBody Employee employee) {
-//        return employeeService.saveEmployee(employee);
-//    }
 
 
-//    @PutMapping("/update")
-//
-//    public Employee updateById(Employee employee, Long empId) {
-//
-//
-//        return employeeService.updateById(employee, empId);
-//    }
-
-//
-//    @PutMapping("/{empId}")
-//    public ResponseEntity<EmployeeDto> updateEmployeeById(@PathVariable Long empId, @RequestBody Employee updatedEmployee) {
-//        employeeService.updateById(empId, updatedEmployee)
-//
-//        if (updated != null) {
-//            return ResponseEntity.ok(updated);
-//        } else {
-//            return ResponseEntity.notFound().build();
-//        }
-//    }
 
 
 }

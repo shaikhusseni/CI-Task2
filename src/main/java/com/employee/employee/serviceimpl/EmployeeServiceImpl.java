@@ -2,15 +2,22 @@ package com.employee.employee.serviceimpl;
 
 import com.employee.employee.dtos.EmployeeDto;
 import com.employee.employee.entity.Employee;
+import com.employee.employee.exceptionhandlers.ApiErrorCodes;
+import com.employee.employee.exceptionhandlers.ApiErrorResponse;
 import com.employee.employee.exceptionhandlers.InspireNetException;
 import com.employee.employee.repository.EmployeeRepository;
 import com.employee.employee.service.EmployeeService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
@@ -26,13 +33,13 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 // checks the duplicate present or not
         if (employeeRepository.existsByEmpEmail(employeeDto.getEmpEmail())) {
-            throw new InspireNetException("Employee with this email  is alreday Exists");
+            throw new InspireNetException(ApiErrorCodes.INVALID_REQUEST, "This mobile is Already Existed");
 
         }
         if (employeeRepository.existsByEmpPhno(employeeDto.getEmpPhno())) {
 
 
-            throw new InspireNetException("Employee with this phone  is alreday Exists");
+            throw new InspireNetException(ApiErrorCodes.INVALID_REQUEST, "This Email is Already Existed ");
 
         }
         Employee map = modelMapper.map(employeeDto, Employee.class);
@@ -58,13 +65,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
 
-    //to check get  Single  Employee Data based on empId
-    @Override
-    public EmployeeDto getById(Long empId) {
-        Employee getEmp = employeeRepository.getReferenceById(empId);
-        return modelMapper.map(getEmp, EmployeeDto.class);
 
-    }
+
 //    to update existed Employee Data
 
     @Override
@@ -78,7 +80,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             if (updatedEmployee.getEmpEmail() != null &&
                     !updatedEmployee.getEmpEmail().equals(existingEmployee.getEmpEmail()) &&
                     employeeRepository.existsByEmpEmail(updatedEmployee.getEmpEmail())) {
-                throw new InspireNetException("Employee with this email already exists");
+                throw new InspireNetException(ApiErrorCodes.INTERNAL_SERVER_ERROR, "Employee with this email already exists");
             }
 
 
@@ -87,7 +89,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             if (updatedEmployee.getEmpPhno() != null &&
                     !updatedEmployee.getEmpPhno().equals(existingEmployee.getEmpPhno()) &&
                     employeeRepository.existsByEmpPhno(updatedEmployee.getEmpPhno())) {
-                throw new InspireNetException("Employee with this phone number already exists");
+                throw new InspireNetException(ApiErrorCodes.INTERNAL_SERVER_ERROR, "Employee with this phone number already exists");
             }
 
             // Update other fields except for email and phone
@@ -102,121 +104,92 @@ public class EmployeeServiceImpl implements EmployeeService {
             Employee updatedEntity = employeeRepository.save(existingEmployee);
 
             return modelMapper.map(updatedEntity, EmployeeDto.class);
-        } else {
+        }
+        else {
             return null;
         }
 
     }
 
+//    this method use to delete employees based on  id and If the employee is not existed in the db it throws Error Code in postman console
+        @Override
+        public void deleteById (Long empId) throws InspireNetException {
+            Optional<Employee> employeeOptional = employeeRepository.findById(empId);
 
-//            // Update the existingEmployee object with the fields from updatedEmployee
-//            existingEmployee.setEmpName(updatedEmployee.getEmpName());
-//
-//            if (employeeRepository.existsByEmpEmail(updatedEmployee.getEmpEmail()))
-//            {
-//                throw new IllegalArgumentException("Employee with this email  is already Exists so,no possible to update");
-//
-//            }
-//            existingEmployee.setEmpPhno(updatedEmployee.getEmpPhno());
-//            if (employeeRepository.existsByEmpPhno(updatedEmployee.getEmpPhno())) {
-//
-//
-//                throw new IllegalArgumentException("Employee with this phone  is already Exists  so, no possible to update");
-//
-//            }
-//
-//            existingEmployee.setEmpEmail(updatedEmployee.getEmpEmail());
-//            existingEmployee.setEmpAddress(updatedEmployee.getEmpAddress());
-//
-//
-//            // Save the updated employee
-//            Employee updatedEntity = employeeRepository.save(existingEmployee);
-//
-//            return modelMapper.map(updatedEntity, EmployeeDto.class);
-//        } else {
-//            // Handle the case when the employee with the given ID doesn't exist
-//            // You can throw an exception or handle it based on your application logic
-//            // For example:
-//            // throw new NotFoundException("Employee with ID " + empId + " not found");
-//            return null;
-//
-//        }
+            if (employeeOptional.isPresent()) {
+                employeeRepository.deleteById(empId);
+            } else {
+                throw new InspireNetException(ApiErrorCodes.RESOURCE_NOT_FOUND, "Employee with ID " + empId + " not found");
+            }
+        }
 
-//    }
+    //    this method use to get employees based on  id and If the employee is not existed in the db it throws Error Code in postman console
+
+    public EmployeeDto getById(Long empId) throws InspireNetException {
+            Optional<Employee> employeeOptional = employeeRepository.findById(empId);
+
+            if (employeeOptional.isPresent()) {
+                Employee employee = employeeOptional.get();
+                return modelMapper.map(employee, EmployeeDto.class);
+            } else {
+                throw new InspireNetException(ApiErrorCodes.RESOURCE_NOT_FOUND, "Employee with ID " + empId + " not found");
+            }
 
 
-    @Override
-    public void deleteById(Long empId) {
+        }
 
-        employeeRepository.deleteById(empId);
-    }
-
-//this is wrong way
-//    @Override
-//    public EmployeeDto getById(Long empId) {
-//
-//        Employee map = modelMapper.map(empId, Employee.class);
-//
-//        Employee getEmp = employeeRepository.getReferenceById(map.getEmpId());
-//        return modelMapper.map(getEmp,EmployeeDto.class);
-//
-//
-//
-//    }
+//        model mapper to convert EmployeeDto to Employee Entity
+public EmployeeDto empToDto(Employee emp) {
+    EmployeeDto empDto = this.modelMapper.map(emp, EmployeeDto.class);
+    return empDto;
+}
 
 
-//
-//    @Override
-//    public List<EmployeeDto> getEmployees() {
-//        List<Employee> all = employeeRepository.findAll();
-//        EmployeeDto map = modelMapper.map(all, EmployeeDto.class);
-//        return map;
-//    }
-//
-//    @Override
-//    public EmployeeDto getById(Long empId) {
-//        return employeeRepository.findById(empId).get();
-//
-//    }
-//
-//
-//    @Override
-//    public EmployeeDto updateById(Long empId, Employee updatedEmployee) {
-//        return null;
-//    }
-//
-//
-//    @Override
-//    public EmployeeDto updateById(Long empId, EmployeeDto updatedEmployee) {
-//        Employee existingEmployee = employeeRepository.findById(empId).get();
-//
-//        if (existingEmployee != null) {
-//            // Update existingEmployee with details from updatedEmployee
-//            // Assuming setters are available in the Employee class
-//            existingEmployee.setEmpName(updatedEmployee.getEmpName());
-//
-//
-//            // Save the updated employee to the repository
-//            return employeeRepository.save(existingEmployee);
-//        }
-//
-//        return null; // Or handle appropriately if employee not found
-
-
-    //Dto introduction
-
-//    public Employee (EmployeeDto empDto) {
-//        Employee emp = this.modelMapper.map(empDto, Employee.class);
-//        return emp;
-//
-//    }
-
-
-    public EmployeeDto empToDto(Employee emp) {
-        EmployeeDto empDto = this.modelMapper.map(emp, EmployeeDto.class);
-        return empDto;
-    }
 
 }
+
+
+
+
+
+
+//    @Override
+//    public EmployeeDto getById(Long empId) throws InspireNetException {
+//        // Try to retrieve the employee
+//        Employee getEmp = employeeRepository.getById(empId);
+//
+//        // Check if the employee exists
+//        if (getEmp == null) {
+//            // If not found, throw a specific InspireNetException with RESOURCE_NOT_FOUND error code
+//            throw new InspireNetException(ApiErrorCodes.RESOURCE_NOT_FOUND, "Employee with ID " + empId + " not found");
+//        }
+//
+//        // If found, map to EmployeeDto and return
+//        return modelMapper.map(getEmp, EmployeeDto.class);
+//    }
+//
+
+
+
+//
+//    @Override
+//    public EmployeeDto deleteById(Long empId) throws InspireNetException {
+//
+//        employeeRepository.deleteById(empId);
+//         return
+//
+//    }
+
+//    @Override
+//    public ResponseEntity<ApiErrorResponse> deleteById(Long empId) {
+//        try {
+//            employeeRepository.deleteById(empId);
+//            return ResponseEntity.ok(new ApiErrorResponse("EMPLOYEE_DELETED")); // Successful deletion
+//        } catch (Exception ex) {
+//            // Handle unexpected errors
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(new ApiErrorResponse("INTERNAL_SERVER_ERROR", ex.getMessage()));
+//        }
+//    }
 
 

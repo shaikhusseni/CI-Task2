@@ -2,7 +2,9 @@ package com.employee.employee.service;
 
 import com.employee.employee.dtos.EmployeeDto;
 import com.employee.employee.entity.Employee;
+import com.employee.employee.exceptionhandlers.ApiErrorResponse;
 import com.employee.employee.exceptionhandlers.InspireNetException;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -13,12 +15,13 @@ public interface EmployeeService {
 
     public List<EmployeeDto> getEmployees();
 
-    public EmployeeDto getById(Long empId);
+    public EmployeeDto getById(Long empId) throws InspireNetException;
 
 
     EmployeeDto updateById(Long empId, Employee updatedEmployee) throws InspireNetException;
 
-    public void deleteById(Long empId);
+//    public ResponseEntity<ApiErrorResponse> deleteById(Long empId);
 
+    public void deleteById(Long empId) throws InspireNetException;
 
 }
